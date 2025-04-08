@@ -18,6 +18,8 @@ openai
 anthropic
 google-generativeai
 vertexai
+FlagEmbedding
+
 
 # Database
 pymongo
@@ -25,9 +27,12 @@ peewee
 SQLAlchemy
 boto3
 redis
+sqlalchemy
 sqlmodel
 chromadb
 psycopg2-binary
+clickhouse-connect
+
 
 # Observability
 langfuse
@@ -64,3 +69,6 @@ beautifulsoup4
 # Llama Index for RAG
 llama-index
 llama-index-llms-ollama
+
+openpyxl
+

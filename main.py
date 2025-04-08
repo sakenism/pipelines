@@ -31,14 +31,19 @@ import subprocess
 
 from config import API_KEY, PIPELINES_DIR
 
+from FlagEmbedding import BGEM3FlagModel
+import certifi
+                    
 if not os.path.exists(PIPELINES_DIR):
     os.makedirs(PIPELINES_DIR)
 
-
+os.environ['REQUESTS_CA_BUNDLE'] = '/etc/ssl/certs/ca-certificates.crt'
+os.environ['SSL_CERT_FILE'] = '/etc/ssl/certs/ca-certificates.crt'
 PIPELINES = {}
 PIPELINE_MODULES = {}
 PIPELINE_NAMES = {}
 
+snapshot_dir ='/root/.cache/huggingface/hub/models--BAAI--bge-m3/snapshots/5617a9f61b028005a4858fdac845db406aefb181'
 
 def get_all_pipelines():
     pipelines = {}
@@ -106,31 +111,28 @@ def get_all_pipelines():
 
     return pipelines
 
-
 def parse_frontmatter(content):
     frontmatter = {}
-    for line in content.split("\n"):
-        if ":" in line:
-            key, value = line.split(":", 1)
+    for line in content.split('\n'):
+        if ':' in line:
+            key, value = line.split(':', 1)
             frontmatter[key.strip().lower()] = value.strip()
     return frontmatter
 
-
 def install_frontmatter_requirements(requirements):
     if requirements:
-        req_list = [req.strip() for req in requirements.split(",")]
+        req_list = [req.strip() for req in requirements.split(',')]
         for req in req_list:
             print(f"Installing requirement: {req}")
             subprocess.check_call([sys.executable, "-m", "pip", "install", req])
     else:
         print("No requirements found in frontmatter.")
 
-
 async def load_module_from_path(module_name, module_path):
 
     try:
         # Read the module content
-        with open(module_path, "r") as file:
+        with open(module_path, 'r', encoding='utf-8') as file:
             content = file.read()
 
         # Parse frontmatter
@@ -142,8 +144,8 @@ async def load_module_from_path(module_name, module_path):
                 frontmatter = parse_frontmatter(frontmatter_content)
 
         # Install requirements if specified
-        if "requirements" in frontmatter:
-            install_frontmatter_requirements(frontmatter["requirements"])
+        if 'requirements' in frontmatter:
+            install_frontmatter_requirements(frontmatter['requirements'])
 
         # Load the module
         spec = importlib.util.spec_from_file_location(module_name, module_path)
@@ -252,6 +254,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(docs_url="/docs", redoc_url=None, lifespan=lifespan)
 
+app.state.maksat_model = BGEM3FlagModel(snapshot_dir,
+                    use_fp16=True) # Setting use_fp16 to True speeds up computation with a slight performance degradation
+
 app.state.PIPELINES = PIPELINES
 
 
@@ -271,6 +276,8 @@ app.add_middleware(
 async def check_url(request: Request, call_next):
     start_time = int(time.time())
     app.state.PIPELINES = get_all_pipelines()
+    app.state.maks_request = request
+    req_cookies = request.cookies
     response = await call_next(request)
     process_time = int(time.time()) - start_time
     response.headers["X-Process-Time"] = str(process_time)
@@ -280,7 +287,7 @@ async def check_url(request: Request, call_next):
 
 @app.get("/v1/models")
 @app.get("/models")
-async def get_models(user: str = Depends(get_current_user)):
+async def get_models():
     """
     Returns the available pipelines
     """
@@ -689,6 +696,8 @@ async def generate_openai_chat_completion(form_data: OpenAIChatCompletionForm):
                     model_id=pipeline_id,
                     messages=messages,
                     body=form_data.model_dump(),
+                    request=app.state.maks_request,
+                    maksat_model=app.state.maksat_model
                 )
 
                 logging.info(f"stream:true:{res}")
@@ -743,6 +752,8 @@ async def generate_openai_chat_completion(form_data: OpenAIChatCompletionForm):
                 model_id=pipeline_id,
                 messages=messages,
                 body=form_data.model_dump(),
+                request=app.state.maks_request,
+                maksat_model=app.state.maksat_model 
             )
             logging.info(f"stream:false:{res}")
 

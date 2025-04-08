@@ -17,8 +17,20 @@ ENV ENV=prod \
 
 # Install GCC and build tools. 
 # These are kept in the final image to enable installing packages on the fly.
+#RUN apt-get update && \
+#    apt-get install -y gcc build-essential curl git zlib1g-dev && \
+#    apt-get clean && \
+#    rm -rf /var/lib/apt/lists/*
+
 RUN apt-get update && \
-    apt-get install -y gcc build-essential curl git && \
+    apt-get install -y \
+        gcc \
+        build-essential \
+        curl \
+        git \
+        zlib1g-dev \
+        libgl1 \
+        libglib2.0-0 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
