@@ -48,9 +48,9 @@ RUN if [ "$MINIMUM_BUILD" != "true" ]; then \
         fi \
     fi
 RUN if [ "$MINIMUM_BUILD" = "true" ]; then \
-        uv pip install --system -r requirements-minimum.txt --no-cache-dir; \
+        pip install --system -r requirements-minimum.txt --no-cache-dir; \
     else \
-        uv pip install --system -r requirements.txt --no-cache-dir; \
+        pip install --system -r requirements.txt --no-cache-dir; \
     fi
 
 
