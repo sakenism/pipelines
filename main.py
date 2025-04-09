@@ -32,18 +32,18 @@ import subprocess
 from config import API_KEY, PIPELINES_DIR
 
 from FlagEmbedding import BGEM3FlagModel
-import certifi
                     
 if not os.path.exists(PIPELINES_DIR):
     os.makedirs(PIPELINES_DIR)
 
 os.environ['REQUESTS_CA_BUNDLE'] = '/etc/ssl/certs/ca-certificates.crt'
 os.environ['SSL_CERT_FILE'] = '/etc/ssl/certs/ca-certificates.crt'
+
 PIPELINES = {}
 PIPELINE_MODULES = {}
 PIPELINE_NAMES = {}
 
-snapshot_dir ='/root/.cache/huggingface/hub/models--BAAI--bge-m3/snapshots/5617a9f61b028005a4858fdac845db406aefb181'
+# snapshot_dir ='/root/.cache/huggingface/hub/models--BAAI--bge-m3/snapshots/5617a9f61b028005a4858fdac845db406aefb181'
 
 def get_all_pipelines():
     pipelines = {}
@@ -254,8 +254,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(docs_url="/docs", redoc_url=None, lifespan=lifespan)
 
-app.state.maksat_model = BGEM3FlagModel(snapshot_dir,
-                    use_fp16=True) # Setting use_fp16 to True speeds up computation with a slight performance degradation
+
+app.state.maksat_model = BGEM3FlagModel('BAAI/bge-m3', use_fp16=True)
 
 app.state.PIPELINES = PIPELINES
 
