@@ -71,4 +71,5 @@ llama-index
 llama-index-llms-ollama
 
 openpyxl
-
+langchain==0.3.19
+langchain-community==0.3.18
