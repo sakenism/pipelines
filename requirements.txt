@@ -79,3 +79,7 @@ langchain-experimental
 langgraph
 langchain-ollama
 
+
+
+# Kayir
+python-dotenv
